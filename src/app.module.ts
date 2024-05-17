@@ -13,7 +13,6 @@ import { UtilsModule } from './utils/utils.module';
       isGlobal: true,
     }),
     MongooseModule.forRoot(process.env.DATABASE_URL),
-    UtilsModule
   ],
   controllers: [AppController],
   providers: [AppService],
