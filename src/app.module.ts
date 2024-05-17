@@ -5,6 +5,7 @@ import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UtilsModule } from './utils/utils.module';
+import { UserRepository } from './user/user.repository';
 
 @Module({
   imports: [
