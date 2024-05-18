@@ -1,0 +1,20 @@
+version: '3.1'
+
+services:
+  server:
+    build:
+      dockerfile: ./Dockerfile.development
+    volumes:
+      - .:/usr/src/app
+    environment:
+      DATABASE_URL: mongodb://mongo/myWebApp
+      BCRYPT_SALT: 35
+    ports:
+      - 3000:3000
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo
+    ports:
+      - 27017:27017

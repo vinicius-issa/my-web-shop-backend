@@ -4,6 +4,7 @@ import { Role, User } from '../model/user.model';
 
 @Schema({
   timestamps: true,
+  collection: 'users',
 })
 export class UserSchemaDefinition implements User {
   @Prop({ required: true, unique: true })
