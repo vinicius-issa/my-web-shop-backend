@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CreateUserDTO, UserService } from './user.service';
-import { UserRepository } from './user.repository';
+import { CreateUserDTO } from './dto/user.dto';
 import { Role, User } from './model/user.model';
+import { UserRepository } from './user.repository';
+import { UserService } from './user.service';
 
 class UserRepositoryMock {
   public createUser(newUser: CreateUserDTO): Promise<User> {

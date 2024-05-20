@@ -1,27 +1,52 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Role } from 'src/user/model/user.model';
-import { UserRepository } from 'src/user/user.repository';
-import { UserService } from 'src/user/user.service';
+import { CreateUserDTO } from '../user/dto/user.dto';
+import { Role } from '../user/model/user.model';
+import { UserService } from '../user/user.service';
+import { CryptService } from '../utils/crypt.service';
 import { AuthService } from './auth.service';
 
-const userServiceMock: UserRepository = {
-  createUser: () =>
-    Promise.resolve({
-      name: 'New User',
-      email: 'user@mail.com',
-      password: 'some-password',
-      role: 'CLIENT' as Role,
-    }),
-};
+class CryptServiceMock {
+  hash(password: string) {
+    return Promise.resolve('new-hash');
+  }
+  compare(password: string, hash: string) {
+    return Promise.resolve(true);
+  }
+}
+
+class UserServiceMock {
+  createUser(user: CreateUserDTO) {
+    return Promise.resolve({
+      email: 'user@test.com',
+      password: 'hash-pasword',
+      name: 'User Test',
+      role: Role.CLIENT,
+    });
+  }
+}
 
 describe('AuthService', () => {
   let service: AuthService;
+  let cryptServiceMock: CryptServiceMock;
+  let userServiceMock: UserServiceMock;
+
+  const newUserMock = {
+    name: 'New User',
+    password: '123456',
+    email: 'user@test.com',
+  };
 
   beforeEach(async () => {
+    cryptServiceMock = new CryptServiceMock();
+    userServiceMock = new UserServiceMock();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [AuthService],
     })
       .useMocker((token) => {
+        if (token === CryptService) {
+          return cryptServiceMock;
+        }
         if (token === UserService) {
           return userServiceMock;
         }
@@ -33,5 +58,25 @@ describe('AuthService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  it('should call crypt hash with user password', async () => {
+    const spyCrypt = jest.spyOn(cryptServiceMock, 'hash');
+
+    await service.signup(newUserMock);
+
+    return expect(spyCrypt).toHaveBeenCalledWith('123456');
+  });
+
+  it('should call user service with user and hash password', async () => {
+    const spyCrypt = jest.spyOn(userServiceMock, 'createUser');
+
+    await service.signup(newUserMock);
+
+    return expect(spyCrypt).toHaveBeenCalledWith({
+      name: 'New User',
+      password: 'new-hash',
+      email: 'user@test.com',
+    });
   });
 });

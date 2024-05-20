@@ -1,9 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { UserRepository } from './user.repository';
-import { rootMongooseTestModule } from '../config/mongo-in-memory';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserSchemaDefinition, UserSchema } from './schema/user.schema';
-import { CreateUserDTO } from './user.service';
+import { Test, TestingModule } from '@nestjs/testing';
+import { rootMongooseTestModule } from '../config/mongo-in-memory';
+import { CreateUserDTO } from './dto/user.dto';
+import { Role } from './model/user.model';
+import { UserSchema, UserSchemaDefinition } from './schema/user.schema';
+import { UserRepository } from './user.repository';
 
 describe('UserRepository', () => {
   let service: UserRepository;
@@ -28,7 +29,7 @@ describe('UserRepository', () => {
       email: 'mail@test.com',
       name: 'Test User',
       password: 'my-hard-pass',
-      role: 'ADMIN',
+      role: 'ADMIN' as Role,
     };
 
     const savedUser = await service.createUser(newUser);
