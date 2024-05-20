@@ -9,8 +9,10 @@ export class AuthService {
     private readonly userService: UserService,
   ) {}
 
-  public async signup(user: NewUserDTO) {
+  public async signup(user: SignupPayload) {
+    console.log('AQUI');
     const hash = await this.cryptService.hash(user.password);
+    console.log('AQUI');
     await this.userService.createUser({
       ...user,
       password: hash,
