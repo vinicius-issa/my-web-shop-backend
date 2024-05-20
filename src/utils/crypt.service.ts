@@ -7,9 +7,7 @@ export class CryptService {
   private readonly SALT = BCRYPT_SALT;
 
   public async hash(password: string): Promise<string> {
-    console.log('HASH', this.SALT);
     const hash = await bcryp.hash(password, this.SALT);
-    console.log('HASH', hash);
     return hash;
   }
 

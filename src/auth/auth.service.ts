@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { CryptService } from '../utils/crypt.service';
+import { SignupPayload } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -10,9 +11,7 @@ export class AuthService {
   ) {}
 
   public async signup(user: SignupPayload) {
-    console.log('AQUI');
     const hash = await this.cryptService.hash(user.password);
-    console.log('AQUI');
     await this.userService.createUser({
       ...user,
       password: hash,
