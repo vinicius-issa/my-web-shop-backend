@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDTO } from './dto/user.dto';
@@ -15,5 +15,13 @@ export class UserRepository {
     const createdUser = new this.userModel(newUser);
 
     return createdUser.save();
+  }
+
+  public async getUserByEmail(email: string): Promise<User> {
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 }
