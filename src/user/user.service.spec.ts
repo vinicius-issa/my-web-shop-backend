@@ -8,7 +8,16 @@ class UserRepositoryMock {
   public createUser(newUser: CreateUserDTO): Promise<User> {
     return Promise.resolve({
       name: 'UserName',
-      role: 'ADMIN' as Role,
+      role: Role.ADMIN,
+      email: 'some-mail',
+      password: 'some-password',
+    });
+  }
+
+  public getUserByEmail(email: string): Promise<User> {
+    return Promise.resolve({
+      name: 'UserName',
+      role: Role.ADMIN,
       email: 'some-mail',
       password: 'some-password',
     });
@@ -35,38 +44,71 @@ describe('UserService', () => {
     service = module.get<UserService>(UserService);
   });
 
-  it('should add an Admin user', () => {
-    const adminUser: CreateUserDTO = {
-      name: 'UserName',
-      role: 'ADMIN' as Role,
-      email: 'some-mail',
-      password: 'some-password',
-    };
+  describe('createUser', () => {
+    it('should add an Admin user', () => {
+      const adminUser: CreateUserDTO = {
+        name: 'UserName',
+        role: 'ADMIN' as Role,
+        email: 'some-mail',
+        password: 'some-password',
+      };
 
-    const spyRepository = jest.spyOn(userMockRepository, 'createUser');
-    service.createUser(adminUser);
-    expect(spyRepository).toHaveBeenCalledWith({
-      name: 'UserName',
-      role: 'ADMIN' as Role,
-      email: 'some-mail',
-      password: 'some-password',
+      const spyRepository = jest.spyOn(userMockRepository, 'createUser');
+      service.createUser(adminUser);
+      expect(spyRepository).toHaveBeenCalledWith({
+        name: 'UserName',
+        role: 'ADMIN' as Role,
+        email: 'some-mail',
+        password: 'some-password',
+      });
+    });
+
+    it('should add an CLIENT user', () => {
+      const adminUser: CreateUserDTO = {
+        name: 'UserName',
+        email: 'some-mail',
+        password: 'some-password',
+      };
+
+      const spyRepository = jest.spyOn(userMockRepository, 'createUser');
+      service.createUser(adminUser);
+      expect(spyRepository).toHaveBeenCalledWith({
+        name: 'UserName',
+        role: 'CLIENT',
+        email: 'some-mail',
+        password: 'some-password',
+      });
     });
   });
 
-  it('should add an CLIENT user', () => {
-    const adminUser: CreateUserDTO = {
-      name: 'UserName',
-      email: 'some-mail',
+  describe('getUserByEmail', () => {
+    const userTest = {
+      email: 'test@get.user',
+      name: 'get user',
       password: 'some-password',
+      role: Role.CLIENT,
     };
+    it('should return the correct User', async () => {
+      const user = await service.getUserByEmail('test@get.user');
 
-    const spyRepository = jest.spyOn(userMockRepository, 'createUser');
-    service.createUser(adminUser);
-    expect(spyRepository).toHaveBeenCalledWith({
-      name: 'UserName',
-      role: 'CLIENT',
-      email: 'some-mail',
-      password: 'some-password',
+      expect(user).toMatchObject({
+        name: 'UserName',
+        role: Role.ADMIN,
+        email: 'some-mail',
+        password: 'some-password',
+      });
+    });
+
+    it('should throw if user not exist', async () => {
+      jest
+        .spyOn(userMockRepository, 'getUserByEmail')
+        .mockImplementationOnce(() => {
+          throw new Error('Not Found');
+        });
+
+      return expect(
+        service.getUserByEmail('no-exist@get.user'),
+      ).rejects.toThrow('Not Found');
     });
   });
 });

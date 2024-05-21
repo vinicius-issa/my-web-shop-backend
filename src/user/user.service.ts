@@ -13,4 +13,8 @@ export class UserService {
       role: newUser.role || Role.CLIENT,
     });
   }
+
+  public async getUserByEmail(email: string): Promise<User> {
+    return this.userRepository.getUserByEmail(email);
+  }
 }
