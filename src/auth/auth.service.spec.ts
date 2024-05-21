@@ -23,6 +23,15 @@ class UserServiceMock {
       role: Role.CLIENT,
     });
   }
+
+  getUserByEmail(email: string) {
+    return Promise.resolve({
+      email: 'user@test.com',
+      password: 'hash-pasword',
+      name: 'User Test',
+      role: Role.CLIENT,
+    });
+  }
 }
 
 describe('AuthService', () => {
@@ -60,23 +69,60 @@ describe('AuthService', () => {
     expect(service).toBeDefined();
   });
 
-  it('should call crypt hash with user password', async () => {
-    const spyCrypt = jest.spyOn(cryptServiceMock, 'hash');
+  describe('signup', () => {
+    it('should call crypt hash with user password', async () => {
+      const spyCrypt = jest.spyOn(cryptServiceMock, 'hash');
 
-    await service.signup(newUserMock);
+      await service.signup(newUserMock);
 
-    return expect(spyCrypt).toHaveBeenCalledWith('123456');
+      return expect(spyCrypt).toHaveBeenCalledWith('123456');
+    });
+
+    it('should call user service with user and hash password', async () => {
+      const spyCrypt = jest.spyOn(userServiceMock, 'createUser');
+
+      await service.signup(newUserMock);
+
+      return expect(spyCrypt).toHaveBeenCalledWith({
+        name: 'New User',
+        password: 'new-hash',
+        email: 'user@test.com',
+      });
+    });
   });
 
-  it('should call user service with user and hash password', async () => {
-    const spyCrypt = jest.spyOn(userServiceMock, 'createUser');
+  describe('signin', () => {
+    const email = 'mail@test.com';
+    const password = '123456';
 
-    await service.signup(newUserMock);
+    it('Should get user with correct email', async () => {
+      const spyGetUser = jest.spyOn(userServiceMock, 'getUserByEmail');
+      await service.signin({ email, password });
 
-    return expect(spyCrypt).toHaveBeenCalledWith({
-      name: 'New User',
-      password: 'new-hash',
-      email: 'user@test.com',
+      expect(spyGetUser).toHaveBeenCalledWith(email);
+    });
+
+    it('Should throw if getUserByEmail throw', async () => {
+      jest
+        .spyOn(userServiceMock, 'getUserByEmail')
+        .mockImplementationOnce(async () => {
+          throw new Error('Not Found');
+        });
+
+      expect(service.signin({ email, password })).rejects.toThrow('Not Found');
+    });
+
+    it('Should call cryptService compare with correct params', async () => {
+      const spyCompare = jest.spyOn(cryptServiceMock, 'compare');
+      await service.signin({ email, password });
+
+      expect(spyCompare).toHaveBeenCalledWith(password, 'hash-pasword');
+    });
+
+    it('Should throw NotFound if password is not correct', async () => {
+      jest.spyOn(cryptServiceMock, 'compare').mockResolvedValueOnce(false);
+
+      expect(service.signin({ email, password })).rejects.toThrow('Not Found');
     });
   });
 });

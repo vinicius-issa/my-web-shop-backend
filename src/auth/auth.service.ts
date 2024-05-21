@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { CryptService } from '../utils/crypt.service';
-import { SignupPayload } from './dto/auth.dto';
+import { SiginPayload, SiginResponse, SignupPayload } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -16,5 +16,23 @@ export class AuthService {
       ...user,
       password: hash,
     });
+  }
+
+  public async signin({
+    email,
+    password,
+  }: SiginPayload): Promise<SiginResponse> {
+    const user = await this.userService.getUserByEmail(email);
+    const isPasswordCorrect = await this.cryptService.compare(
+      password,
+      user.password,
+    );
+    if (!isPasswordCorrect) {
+      throw new NotFoundException();
+    }
+    return {
+      token: 'wrong-token',
+      refreshToken: 'wrong-refresh-token',
+    };
   }
 }
