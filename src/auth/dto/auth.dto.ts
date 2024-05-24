@@ -20,6 +20,7 @@ export class SiginPayload {
 }
 
 export class SiginResponse {
+  type: string;
   token: string;
   refreshToken: string;
 }

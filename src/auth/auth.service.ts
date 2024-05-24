@@ -1,13 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { CryptService } from '../utils/crypt.service';
+import { JwtService } from '../utils/jwt.service';
 import { SiginPayload, SiginResponse, SignupPayload } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly TYPE = 'Bearer';
+
   constructor(
     private readonly cryptService: CryptService,
     private readonly userService: UserService,
+    private readonly jwtService: JwtService,
   ) {}
 
   public async signup(user: SignupPayload) {
@@ -30,9 +34,16 @@ export class AuthService {
     if (!isPasswordCorrect) {
       throw new NotFoundException();
     }
+    const token = this.jwtService.sign({ email, role: user.role });
+    const refreshToken = this.jwtService.signRefreshToken({
+      email,
+      role: user.role,
+    });
+
     return {
-      token: 'wrong-token',
-      refreshToken: 'wrong-refresh-token',
+      type: this.TYPE,
+      token,
+      refreshToken,
     };
   }
 }

@@ -3,6 +3,8 @@ import { CreateUserDTO } from '../user/dto/user.dto';
 import { Role } from '../user/model/user.model';
 import { UserService } from '../user/user.service';
 import { CryptService } from '../utils/crypt.service';
+import { JwtPayload } from '../utils/dto/jwt.dto';
+import { JwtService } from '../utils/jwt.service';
 import { AuthService } from './auth.service';
 
 class CryptServiceMock {
@@ -34,10 +36,35 @@ class UserServiceMock {
   }
 }
 
+class JwtServiceMock {
+  public sign(payload: JwtPayload): string {
+    return 'some-jwt';
+  }
+
+  public verify(token: string): JwtPayload {
+    return {
+      email: 'user@mail.com',
+      role: Role.ADMIN,
+    };
+  }
+
+  public signRefreshToken(payload: JwtPayload): string {
+    return 'some-refresh-jwt';
+  }
+
+  public verifyRefreshToken(token: string): JwtPayload {
+    return {
+      email: 'user@mail.com',
+      role: Role.ADMIN,
+    };
+  }
+}
+
 describe('AuthService', () => {
   let service: AuthService;
   let cryptServiceMock: CryptServiceMock;
   let userServiceMock: UserServiceMock;
+  let jwtServiceMock: JwtServiceMock;
 
   const newUserMock = {
     name: 'New User',
@@ -48,6 +75,7 @@ describe('AuthService', () => {
   beforeEach(async () => {
     cryptServiceMock = new CryptServiceMock();
     userServiceMock = new UserServiceMock();
+    jwtServiceMock = new JwtServiceMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [AuthService],
@@ -58,6 +86,9 @@ describe('AuthService', () => {
         }
         if (token === UserService) {
           return userServiceMock;
+        }
+        if (token === JwtService) {
+          return jwtServiceMock;
         }
       })
       .compile();
@@ -123,6 +154,32 @@ describe('AuthService', () => {
       jest.spyOn(cryptServiceMock, 'compare').mockResolvedValueOnce(false);
 
       expect(service.signin({ email, password })).rejects.toThrow('Not Found');
+    });
+
+    it('Should call jwtServiceSign with correct params', async () => {
+      const spySign = jest.spyOn(jwtServiceMock, 'sign');
+
+      await service.signin({ email, password });
+
+      expect(spySign).toHaveBeenCalledWith({ email, role: Role.CLIENT });
+    });
+
+    it('Should call jwtServiceSignRefreshToken with correct params', async () => {
+      const spySign = jest.spyOn(jwtServiceMock, 'signRefreshToken');
+
+      await service.signin({ email, password });
+
+      expect(spySign).toHaveBeenCalledWith({ email, role: Role.CLIENT });
+    });
+
+    it('Should return the correct values', async () => {
+      const response = await service.signin({ email, password });
+
+      expect(response).toEqual({
+        type: 'Bearer',
+        token: 'some-jwt',
+        refreshToken: 'some-refresh-jwt',
+      });
     });
   });
 });
