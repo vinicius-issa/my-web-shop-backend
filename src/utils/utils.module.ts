@@ -1,15 +1,20 @@
 import { Module } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+import jsonwebtoken from 'jsonwebtoken';
 import { CryptService } from './crypt.service';
-import * as bcrypt from 'bcrypt'
 
 @Module({
   providers: [
     CryptService,
     {
       provide: 'BCrypt',
-      useValue: bcrypt
-    }
+      useValue: bcrypt,
+    },
+    {
+      provide: 'JsonWebToken',
+      useValue: jsonwebtoken,
+    },
   ],
-  exports: [CryptService]
+  exports: [CryptService],
 })
 export class UtilsModule {}
