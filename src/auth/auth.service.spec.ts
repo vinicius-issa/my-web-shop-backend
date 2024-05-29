@@ -133,14 +133,16 @@ describe('AuthService', () => {
       expect(spyGetUser).toHaveBeenCalledWith(email);
     });
 
-    it('Should throw if getUserByEmail throw', async () => {
+    it('Should throw Unhauthorized error if getUserByEmail throw', async () => {
       jest
         .spyOn(userServiceMock, 'getUserByEmail')
         .mockImplementationOnce(async () => {
           throw new Error('Not Found');
         });
 
-      expect(service.signin({ email, password })).rejects.toThrow('Not Found');
+      expect(service.signin({ email, password })).rejects.toThrow(
+        'Unauthorized',
+      );
     });
 
     it('Should call cryptService compare with correct params', async () => {
@@ -153,7 +155,9 @@ describe('AuthService', () => {
     it('Should throw NotFound if password is not correct', async () => {
       jest.spyOn(cryptServiceMock, 'compare').mockResolvedValueOnce(false);
 
-      expect(service.signin({ email, password })).rejects.toThrow('Not Found');
+      expect(service.signin({ email, password })).rejects.toThrow(
+        'Unauthorized',
+      );
     });
 
     it('Should call jwtServiceSign with correct params', async () => {

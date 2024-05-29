@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { User } from '../user/model/user.model';
 import { UserService } from '../user/user.service';
 import { CryptService } from '../utils/crypt.service';
 import { JwtService } from '../utils/jwt.service';
@@ -26,13 +27,18 @@ export class AuthService {
     email,
     password,
   }: SigninPayload): Promise<SigninResponse> {
-    const user = await this.userService.getUserByEmail(email);
+    let user: User;
+    try {
+      user = await this.userService.getUserByEmail(email);
+    } catch {
+      throw new UnauthorizedException();
+    }
     const isPasswordCorrect = await this.cryptService.compare(
       password,
       user.password,
     );
     if (!isPasswordCorrect) {
-      throw new NotFoundException();
+      throw new UnauthorizedException();
     }
     const token = this.jwtService.sign({ email, role: user.role });
     const refreshToken = this.jwtService.signRefreshToken({

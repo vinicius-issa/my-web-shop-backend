@@ -11,7 +11,12 @@ export class CryptService {
     return hash;
   }
 
-  public compare(password: string, hash: string): Promise<boolean> {
-    return this.bcrypt.compare(password, hash);
+  public async compare(password: string, hash: string): Promise<boolean> {
+    try {
+      const result = await this.bcrypt.compare(password, hash);
+      return result;
+    } catch (e) {
+      console.log(e);
+    }
   }
 }
