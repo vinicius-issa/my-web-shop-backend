@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { CryptService } from '../utils/crypt.service';
 import { JwtService } from '../utils/jwt.service';
-import { SiginPayload, SiginResponse, SignupPayload } from './dto/auth.dto';
+import { SigninPayload, SigninResponse, SignupPayload } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +25,7 @@ export class AuthService {
   public async signin({
     email,
     password,
-  }: SiginPayload): Promise<SiginResponse> {
+  }: SigninPayload): Promise<SigninResponse> {
     const user = await this.userService.getUserByEmail(email);
     const isPasswordCorrect = await this.cryptService.compare(
       password,

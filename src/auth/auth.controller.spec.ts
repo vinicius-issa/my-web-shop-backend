@@ -1,10 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { SigninResponse } from './dto/auth.dto';
 
 class AuthServiceMock {
   signup() {
     return Promise.resolve();
+  }
+  signin(): Promise<SigninResponse> {
+    return Promise.resolve({
+      type: 'Bearer',
+      token: '123-abc',
+      refreshToken: '456-def',
+    });
   }
 }
 
@@ -42,5 +50,16 @@ describe('AuthController', () => {
     await controller.signup(user);
 
     return expect(spySignup).toHaveBeenCalledWith(user);
+  });
+
+  it('should call authService signin with correct params', async () => {
+    const spySignin = jest.spyOn(authService, 'signin');
+    const credentials = {
+      email: 'user@mail.com',
+      password: '123456',
+    };
+    await controller.signin(credentials);
+
+    return expect(spySignin).toHaveBeenCalledWith(credentials);
   });
 });

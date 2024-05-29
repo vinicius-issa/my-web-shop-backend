@@ -11,7 +11,7 @@ export class SignupPayload {
   password: string;
 }
 
-export class SiginPayload {
+export class SigninPayload {
   @IsEmail()
   email: string;
 
@@ -19,7 +19,7 @@ export class SiginPayload {
   password: string;
 }
 
-export class SiginResponse {
+export class SigninResponse {
   type: string;
   token: string;
   refreshToken: string;
