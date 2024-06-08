@@ -1,9 +1,10 @@
-FROM node:22-alpine3.18 AS development
+FROM node:22 AS development
 
 WORKDIR /usr/src/app
 EXPOSE 3000
 
-COPY . .
+COPY package* .
+COPY src .
 
 RUN npm install
 
