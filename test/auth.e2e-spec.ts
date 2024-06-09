@@ -40,83 +40,137 @@ describe('AuthController (e2e)', () => {
     await app.init();
   });
 
-  it('/auth/signup (POST) should create with success', () => {
-    return request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        name: 'User Test',
-        email: 'user@test.com',
-        password: '123456',
-      })
-      .expect(201);
-  });
-
-  it('/auth/signup (POST) should return an error if a field is missi', () => {
-    return request(app.getHttpServer())
-      .post('/auth/signup')
-      .send({
-        name: 'User Test',
-        email: 'user@test.com',
-      })
-      .expect(400);
-  });
-
-  it('/auth/signin (POST) should authenticate user with success', async () => {
-    await request(app.getHttpServer()).post('/auth/signup').send({
-      name: 'User Test',
-      email: 'user2@test.com',
-      password: '123456',
+  describe('/auth/signup', () => {
+    it('[POST] should create with success', () => {
+      return request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({
+          name: 'User Test',
+          email: 'user@test.com',
+          password: '123456',
+        })
+        .expect(201);
     });
 
-    return request(app.getHttpServer())
-      .post('/auth/signin')
-      .send({
+    it('[POST] should return an error if a field is missi', () => {
+      return request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({
+          name: 'User Test',
+          email: 'user@test.com',
+        })
+        .expect(400);
+    });
+  });
+
+  describe('/auth/signin', () => {
+    it('[POST] should authenticate user with success', async () => {
+      await request(app.getHttpServer()).post('/auth/signup').send({
+        name: 'User Test',
         email: 'user2@test.com',
         password: '123456',
-      })
-      .expect(200)
-      .expect((res) => {
-        expect(res.body.token).not.toBeNull;
-        expect(res.body.refreshToken).not.toBeNull;
-        expect(res.body.type).toEqual('Bearer');
       });
+
+      return request(app.getHttpServer())
+        .post('/auth/signin')
+        .send({
+          email: 'user2@test.com',
+          password: '123456',
+        })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.token).not.toBeNull;
+          expect(res.body.refreshToken).not.toBeNull;
+          expect(res.body.type).toEqual('Bearer');
+        });
+    });
+
+    it('[POST] should return 401 if user not exist', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/signin')
+        .send({
+          email: 'user-not-exist@test.com',
+          password: '123456',
+        })
+        .expect(401);
+    });
+
+    it('[POST] should return 401 if password is wrong', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/signin')
+        .send({
+          email: 'user2@test.com',
+          password: '654321',
+        })
+        .expect(401);
+    });
+
+    it('[POST] should return 400 if no password', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/signin')
+        .send({
+          email: 'user2@test.com',
+        })
+        .expect(400);
+    });
+
+    it('[POST] should return 400 if no email', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/signin')
+        .send({
+          password: '123456',
+        })
+        .expect(400);
+    });
   });
 
-  it('/auth/signin (POST) should return 401 if user not exist', async () => {
-    return request(app.getHttpServer())
-      .post('/auth/signin')
-      .send({
-        email: 'user-not-exist@test.com',
-        password: '123456',
-      })
-      .expect(401);
-  });
+  describe('/auth/refresh', () => {
+    const url = '/auth/refresh';
 
-  it('/auth/signin (POST) should return 401 if password is wrong', async () => {
-    return request(app.getHttpServer())
-      .post('/auth/signin')
-      .send({
-        email: 'user2@test.com',
-        password: '654321',
-      })
-      .expect(401);
-  });
+    const user = {
+      email: 'refresh@test.com',
+      password: 'refreshPass',
+      name: 'Test Refresh User',
+    };
 
-  it('/auth/signin (POST) should return 400 if no password', async () => {
-    return request(app.getHttpServer())
-      .post('/auth/signin')
-      .send({
-        email: 'user2@test.com',
-      })
-      .expect(400);
-  });
+    let refreshToken: string;
 
-  it('/auth/signin (POST) should return 400 if no email', async () => {
-    return request(app.getHttpServer())
-      .post('/auth/signin')
-      .send({
-        password: '123456',
-      })
-      .expect(400);
+    beforeAll(async () => {
+      await request(app.getHttpServer()).post('/auth/signup').send(user);
+      const response = await request(app.getHttpServer())
+        .post('/auth/signin')
+        .send({
+          email: user.email,
+          password: user.password,
+        });
+      refreshToken = response.body.refreshToken;
+    });
+
+    it('[POST] should return a new token and refresh token', async () => {
+      return request(app.getHttpServer())
+        .post(url)
+        .send({
+          token: refreshToken,
+        })
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.token).not.toBeNull;
+          expect(res.body.refreshToken).not.toBeNull;
+          expect(res.body.type).toEqual('Bearer');
+        });
+    });
+
+    it('[POST] should return 401 if token is invalid', async () => {
+      return request(app.getHttpServer())
+        .post(url)
+        .send({
+          token: 'some-invalid-token',
+        })
+        .expect(401);
+    });
+
+    it('[POST] should return 400 if no token', async () => {
+      return request(app.getHttpServer()).post(url).send().expect(400);
+    });
   });
 });
