@@ -43,7 +43,7 @@ class JwtServiceMock {
 
   public verify(token: string): JwtPayload {
     return {
-      email: 'user@mail.com',
+      email: 'user@test.com',
       role: Role.ADMIN,
     };
   }
@@ -54,7 +54,7 @@ class JwtServiceMock {
 
   public verifyRefreshToken(token: string): JwtPayload {
     return {
-      email: 'user@mail.com',
+      email: 'user@test.com',
       role: Role.ADMIN,
     };
   }
@@ -178,6 +178,60 @@ describe('AuthService', () => {
 
     it('Should return the correct values', async () => {
       const response = await service.signin({ email, password });
+
+      expect(response).toEqual({
+        type: 'Bearer',
+        token: 'some-jwt',
+        refreshToken: 'some-refresh-jwt',
+      });
+    });
+  });
+
+  describe('refresh', () => {
+    const refreshToken = 'token-123';
+
+    it('Should call jwt verify method with correct params', async () => {
+      const spyVerify = jest.spyOn(jwtServiceMock, 'verifyRefreshToken');
+
+      await service.refresh(refreshToken);
+
+      expect(spyVerify).toHaveBeenCalledWith(refreshToken);
+    });
+
+    it('Should throw an Unauthorized if verify method fail', () => {
+      jest
+        .spyOn(jwtServiceMock, 'verifyRefreshToken')
+        .mockImplementationOnce(() => {
+          throw new Error('any error');
+        });
+
+      return expect(service.refresh(refreshToken)).rejects.toThrow(
+        'Unauthorized',
+      );
+    });
+
+    it('Should call getUserByEmail method with correct params', async () => {
+      const spyGetUser = jest.spyOn(userServiceMock, 'getUserByEmail');
+
+      await service.refresh(refreshToken);
+
+      expect(spyGetUser).toHaveBeenCalledWith('user@test.com');
+    });
+
+    it('Should throw an Unauthorized error if getUser method fail', () => {
+      jest
+        .spyOn(userServiceMock, 'getUserByEmail')
+        .mockImplementationOnce(() => {
+          throw new Error('any error');
+        });
+
+      return expect(service.refresh(refreshToken)).rejects.toThrow(
+        'Unauthorized',
+      );
+    });
+
+    it('Should return the correct values', async () => {
+      const response = await service.refresh(refreshToken);
 
       expect(response).toEqual({
         type: 'Bearer',

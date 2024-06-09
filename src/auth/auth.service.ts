@@ -40,6 +40,21 @@ export class AuthService {
     return this.getTokens(user);
   }
 
+  public async refresh(token: string): Promise<SigninResponse> {
+    let email: string;
+
+    try {
+      const user = this.jwtService.verifyRefreshToken(token);
+      email = user.email;
+    } catch {
+      throw new UnauthorizedException();
+    }
+
+    const user = await this.getUserOrFail(email);
+
+    return this.getTokens(user);
+  }
+
   private async getUserOrFail(email: string): Promise<User> {
     try {
       const user = await this.userService.getUserByEmail(email);
