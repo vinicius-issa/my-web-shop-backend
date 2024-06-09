@@ -27,12 +27,8 @@ export class AuthService {
     email,
     password,
   }: SigninPayload): Promise<SigninResponse> {
-    let user: User;
-    try {
-      user = await this.userService.getUserByEmail(email);
-    } catch {
-      throw new UnauthorizedException();
-    }
+    let user = await this.getUserOrFail(email);
+
     const isPasswordCorrect = await this.cryptService.compare(
       password,
       user.password,
@@ -51,5 +47,14 @@ export class AuthService {
       token,
       refreshToken,
     };
+  }
+
+  private async getUserOrFail(email: string): Promise<User> {
+    try {
+      const user = await this.userService.getUserByEmail(email);
+      return user;
+    } catch {
+      throw new UnauthorizedException();
+    }
   }
 }
