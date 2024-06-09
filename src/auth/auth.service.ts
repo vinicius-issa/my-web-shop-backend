@@ -36,17 +36,8 @@ export class AuthService {
     if (!isPasswordCorrect) {
       throw new UnauthorizedException();
     }
-    const token = this.jwtService.sign({ email, role: user.role });
-    const refreshToken = this.jwtService.signRefreshToken({
-      email,
-      role: user.role,
-    });
 
-    return {
-      type: this.TYPE,
-      token,
-      refreshToken,
-    };
+    return this.getTokens(user);
   }
 
   private async getUserOrFail(email: string): Promise<User> {
@@ -56,5 +47,19 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException();
     }
+  }
+
+  private getTokens({ email, role }: User): SigninResponse {
+    const token = this.jwtService.sign({ email, role });
+    const refreshToken = this.jwtService.signRefreshToken({
+      email,
+      role,
+    });
+
+    return {
+      type: this.TYPE,
+      token,
+      refreshToken,
+    };
   }
 }

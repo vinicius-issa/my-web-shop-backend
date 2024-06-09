@@ -123,7 +123,7 @@ describe('AuthService', () => {
   });
 
   describe('signin', () => {
-    const email = 'mail@test.com';
+    const email = 'user@test.com';
     const password = '123456';
 
     it('Should get user with correct email', async () => {
