@@ -19,6 +19,11 @@ export class SigninPayload {
   password: string;
 }
 
+export class RefreshPayload {
+  @IsNotEmpty()
+  token: string;
+}
+
 export class SigninResponse {
   type: string;
   token: string;

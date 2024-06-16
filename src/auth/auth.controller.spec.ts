@@ -14,6 +14,13 @@ class AuthServiceMock {
       refreshToken: '456-def',
     });
   }
+  refresh(): Promise<SigninResponse> {
+    return Promise.resolve({
+      type: 'Bearer',
+      token: '123-abc',
+      refreshToken: '456-def',
+    });
+  }
 }
 
 describe('AuthController', () => {
@@ -61,5 +68,17 @@ describe('AuthController', () => {
     await controller.signin(credentials);
 
     return expect(spySignin).toHaveBeenCalledWith(credentials);
+  });
+
+  it('should call authService refresh with correct params', async () => {
+    const spyRefresh = jest.spyOn(authService, 'refresh');
+    const token = 'Bearer some-refresh-token'
+    
+    const credentials = {
+      token
+    };
+    await controller.refresh(credentials);
+
+    return expect(spyRefresh).toHaveBeenCalledWith(token);
   });
 });
